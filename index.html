@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>🔥 Grill App v1.02</title>
+<title>🔥 Grill App v1.04</title>
 
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,50 +17,49 @@ body {
     text-align: center;
 }
 
-h1 { margin-top: 20px; }
-
-.version {
-    font-size: 12px;
-    opacity: 0.6;
-}
+.version { font-size:12px; opacity:0.6; }
 
 .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 10px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    padding:10px;
 }
 
 button {
-    padding: 16px;
-    font-size: 18px;
-    border-radius: 12px;
-    border: none;
-    margin-top: 10px;
+    padding:16px;
+    font-size:18px;
+    border-radius:12px;
+    border:none;
+    margin-top:10px;
 }
 
 .primary { background:#ff7a00; }
 .secondary { background:#333; color:white; }
 
+/* 👉 KACHELN */
+#grill {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+
 .card {
-    margin: 15px;
-    padding: 20px;
-    border-radius: 20px;
+    background:#1f1f1f;
+    margin:10px;
+    padding:15px;
+    border-radius:16px;
+    width:160px;
 }
 
-.timer {
-    font-size: 40px;
-}
+/* Timer */
+.timer { font-size:26px; }
 
-.instruction {
-    font-size: 20px;
-    margin: 15px 0;
-}
-
+/* Kreis */
 .circleWrapper {
     position:relative;
-    width:120px;
-    margin:20px auto;
+    width:100px;
+    margin:10px auto;
 }
 
 .choice {
@@ -70,6 +69,7 @@ button {
     border-radius:10px;
 }
 
+/* Alarm */
 #alarmOverlay {
     position:fixed;
     top:0;left:0;
@@ -80,7 +80,7 @@ button {
     align-items:center;
     justify-content:center;
     flex-direction:column;
-    font-size:30px;
+    font-size:28px;
     z-index:9999;
 }
 </style>
@@ -89,12 +89,12 @@ button {
 <body>
 
 <h1>🔥 Grill App</h1>
-<div class="version">Version 1.02</div>
+<div class="version">Version 1.04</div>
 
 <div class="grid">
-    <button class="primary" onclick="addBurger()">🍔 Burger</button>
-    <button class="primary" onclick="addSteak()">🥩 Steak</button>
-    <button class="primary" onclick="addBratwurst()">🌭 Bratwurst</button>
+    <button class="primary" onclick="startDish(addBurger)">🍔 Burger</button>
+    <button class="primary" onclick="startDish(addSteak)">🥩 Steak</button>
+    <button class="primary" onclick="startDish(addBratwurst)">🌭 Bratwurst</button>
 </div>
 
 <button class="secondary" onclick="testSound()">🔊 Sound testen</button>
@@ -108,15 +108,35 @@ button {
 </div>
 
 <script>
-// SOUND
-function playSound(){
-    new Audio("beep.mp3").play();
-}
-function vibrate(){
-    if(navigator.vibrate) navigator.vibrate([200,100,200]);
+
+// 🔊 Sound 3x
+function playSoundTriple(){
+    for(let i=0;i<3;i++){
+        setTimeout(()=>{
+            new Audio("beep.mp3").play();
+        }, i*600);
+    }
 }
 
-// ACTION TEXT
+// 📳 Vibration
+function vibrateStrong(){
+    if(navigator.vibrate){
+        navigator.vibrate([300,100,300,100,500]);
+    }
+}
+
+function alertUser(){
+    playSoundTriple();
+    vibrateStrong();
+}
+
+// Start trigger
+function startDish(fn){
+    alertUser();
+    fn();
+}
+
+// Action Text
 function getActionText(text){
     if(text.includes("wenden")) return "🔄 Jetzt wenden!";
     if(text.includes("drehen")) return "↪️ Jetzt drehen!";
@@ -127,41 +147,42 @@ function getActionText(text){
     return "⏰ Nächster Schritt!";
 }
 
-// ALARM
+// Alarm
 let nextStep;
+
 function showAlarm(text){
     document.getElementById("alarmText").innerText=text;
     document.getElementById("alarmOverlay").style.display="flex";
-    playSound();
-    vibrate();
+    alertUser();
 }
+
 function closeAlarm(){
     document.getElementById("alarmOverlay").style.display="none";
     nextStep();
 }
 
-// BURGER
+// 🍔 BURGER
 function addBurger(){
     createCard("🍔 Burger",[
         {text:"🔥 Vorheizen 240°C",time:0},
-        {text:"🥩 2:15 direkt grillen 🔥 dann drehen",time:135},
-        {text:"🔄 2:15 direkt grillen 🔥 dann wenden",time:135},
-        {text:"🥩 1:30 direkt grillen 🔥 dann drehen",time:90},
+        {text:"🥩 2:15 direkt 🔥 dann drehen",time:135},
+        {text:"🔄 2:15 direkt 🔥 dann wenden",time:135},
+        {text:"🥩 1:30 direkt 🔥 dann drehen",time:90},
         {text:"🌡️ indirekt + Buns",time:180}
     ]);
 }
 
-// BRATWURST
+// 🌭 BRATWURST
 function addBratwurst(){
     createCard("🌭 Bratwurst",[
         {text:"🔥 Vorheizen 140–150°C",time:0},
         {text:"🌡️ 5:00 indirekt",time:300},
-        {text:"🔥 hochheizen",time:0},
-        {text:"🌭 4:00 direkt 🔥 dann wenden",time:240}
+        {text:"🌭 4:00 direkt 🔥 dann wenden",time:240},
+        {text:"🌭 4:00 fertig grillen (goldbraun)",time:240}
     ]);
 }
 
-// STEAK AUSWAHL
+// 🥩 STEAK
 function addSteak(){
     let s=document.getElementById("selection");
     s.innerHTML="<h2>🥩 Fleisch wählen</h2>";
@@ -172,7 +193,7 @@ function addSteak(){
 
 function chooseLevel(type){
     let s=document.getElementById("selection");
-    s.innerHTML="<h2>🔥 Garstufe wählen</h2>";
+    s.innerHTML="<h2>🔥 Garstufe</h2>";
 
     s.appendChild(choice("🔴 Englisch",()=>startSteak(type,"e")));
     s.appendChild(choice("🟠 Medium",()=>startSteak(type,"m")));
@@ -195,23 +216,23 @@ function startSteak(type,level){
             steps=[
                 {text:"🔥 250°C+",time:0},
                 {text:"🥩 2:00 direkt 🔥 dann wenden",time:120},
-                {text:"🥩 2:00 direkt grillen",time:120},
+                {text:"🥩 2:00 direkt",time:120},
                 {text:"🌡️ 3:00 indirekt",time:180}
             ];
         } else {
             steps=[
                 {text:"🔥 250°C+",time:0},
                 {text:"🥩 2:30 direkt 🔥 dann wenden",time:150},
-                {text:"🥩 2:30 direkt grillen",time:150},
-                {text:"🌡️ 5:00 indirekt fertig garen",time:300}
+                {text:"🥩 2:30 direkt",time:150},
+                {text:"🌡️ 5:00 indirekt",time:300}
             ];
         }
     } else {
         steps=[
             {text:"🔥 200–220°C",time:0},
             {text:"🥩 3:00 direkt 🔥 dann wenden",time:180},
-            {text:"🥩 3:00 direkt grillen",time:180},
-            {text:"🌡️ 5:00 indirekt vollständig durch",time:300}
+            {text:"🥩 3:00 direkt",time:180},
+            {text:"🌡️ 4–5:00 indirekt (saftig & durch)",time:300}
         ];
     }
 
@@ -227,61 +248,53 @@ function choice(txt,fn){
     return d;
 }
 
-// CARD
+// CARD (jede Kachel!)
 function createCard(title,steps){
     let current=0,timeLeft=0,total=0,interval;
 
-    let dishIcon="⏱️";
-    if(title.includes("Burger")) dishIcon="🍔";
-    if(title.includes("Bratwurst")) dishIcon="🌭";
-    if(title.includes("Steak")) dishIcon="🥩";
+    let icon="🍔";
+    if(title.includes("Bratwurst")) icon="🌭";
+    if(title.includes("Steak")) icon="🥩";
 
     const card=document.createElement("div");
     card.className="card";
 
-    const h=document.createElement("h2");
-    h.innerText=title;
+    const titleEl=document.createElement("div");
+    titleEl.innerText=title;
 
     const timer=document.createElement("div");
     timer.className="timer";
 
     const instr=document.createElement("div");
-    instr.className="instruction";
-
-    const btn=document.createElement("button");
-    btn.innerText="Weiter";
 
     const wrapper=document.createElement("div");
     wrapper.className="circleWrapper";
 
     const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-    svg.setAttribute("width","120");
-    svg.setAttribute("height","120");
+    svg.setAttribute("width","100");
+    svg.setAttribute("height","100");
 
     const circle=document.createElementNS("http://www.w3.org/2000/svg","circle");
-    circle.setAttribute("cx","60");
-    circle.setAttribute("cy","60");
-    circle.setAttribute("r","50");
+    circle.setAttribute("cx","50");
+    circle.setAttribute("cy","50");
+    circle.setAttribute("r","40");
     circle.setAttribute("stroke","#ff7a00");
-    circle.setAttribute("stroke-width","10");
+    circle.setAttribute("stroke-width","8");
     circle.setAttribute("fill","none");
-    circle.setAttribute("stroke-dasharray","314");
-    circle.setAttribute("transform","rotate(-90 60 60)");
+    circle.setAttribute("stroke-dasharray","251");
+    circle.setAttribute("transform","rotate(-90 50 50)");
+
+    const iconEl=document.createElement("div");
+    iconEl.innerText=icon;
+    iconEl.style.position="absolute";
+    iconEl.style.top="50%";
+    iconEl.style.left="50%";
+    iconEl.style.transform="translate(-50%,-50%)";
 
     svg.appendChild(circle);
+    wrapper.append(svg,iconEl);
 
-    const icon=document.createElement("div");
-    icon.innerText=dishIcon;
-    icon.style.position="absolute";
-    icon.style.top="50%";
-    icon.style.left="50%";
-    icon.style.transform="translate(-50%,-50%)";
-    icon.style.fontSize="30px";
-
-    wrapper.appendChild(svg);
-    wrapper.appendChild(icon);
-
-    card.append(h,timer,wrapper,instr,btn);
+    card.append(titleEl,timer,wrapper,instr);
     document.getElementById("grill").appendChild(card);
 
     function run(){
@@ -295,19 +308,15 @@ function createCard(title,steps){
             interval=setInterval(()=>{
                 timeLeft--;
 
-                let m=Math.floor(timeLeft/60);
-                let s=timeLeft%60;
-                timer.innerText=`${m}:${s.toString().padStart(2,"0")}`;
+                timer.innerText=`${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,"0")}`;
 
-                let offset=314*(1-timeLeft/total);
+                let offset=251*(1-timeLeft/total);
                 circle.setAttribute("stroke-dashoffset",offset);
 
                 if(timeLeft<=0){
                     clearInterval(interval);
                     nextStep=next;
-
-                    const action=getActionText(step.text);
-                    showAlarm(action+"\n\n"+step.text);
+                    showAlarm(getActionText(step.text)+"\n\n"+step.text);
                 }
             },1000);
         }
@@ -322,11 +331,10 @@ function createCard(title,steps){
         run();
     }
 
-    btn.onclick=next;
     run();
 }
 
-function testSound(){ playSound(); }
+function testSound(){ alertUser(); }
 
 </script>
 
