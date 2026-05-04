@@ -4,61 +4,58 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>🔥 Grill App</title>
+<title>🔥 Grill App v1.0</title>
 
-<!-- ICON -->
 <link rel="apple-touch-icon" href="icon.png">
-
-<!-- iPhone App Modus -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <style>
 body {
-    font-family: -apple-system, Arial;
+    font-family: -apple-system;
     background: #111;
     color: white;
     text-align: center;
-    margin: 0;
 }
 
-h1 { padding: 20px; }
+h1 { margin-top: 20px; }
 
-.container { padding: 15px; }
+.version {
+    font-size: 12px;
+    opacity: 0.6;
+}
 
+/* Layout */
 .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+    padding: 10px;
 }
 
 button {
     padding: 16px;
     font-size: 18px;
-    border-radius: 14px;
+    border-radius: 12px;
     border: none;
+    margin-top: 10px;
 }
 
-.container button {
-    margin-top: 15px;
-}
+.primary { background:#ff7a00; }
+.secondary { background:#333; color:white; }
 
-.primary { background: #ff7a00; color: white; }
-.secondary { background: #333; color: white; }
-
+/* Karten */
 .card {
     margin: 15px;
     padding: 20px;
     border-radius: 20px;
 }
 
-.card.direct { background: #ff3b30; }
-.card.indirect { background: #007aff; }
-.card.neutral { background: #1f1f1f; }
+.card.direct { background:#ff3b30; }
+.card.indirect { background:#007aff; }
+.card.neutral { background:#1f1f1f; }
 
 .timer {
-    font-size: 48px;
-    font-weight: bold;
+    font-size: 40px;
 }
 
 .instruction {
@@ -66,12 +63,33 @@ button {
     margin: 15px 0;
 }
 
+/* Kreis */
+.circle {
+    width: 120px;
+    margin: 20px auto;
+}
+
+/* Auswahl */
 .choice {
-    background: #2a2a2a;
-    padding: 18px;
-    margin: 10px;
-    border-radius: 14px;
-    font-size: 20px;
+    background:#2a2a2a;
+    padding:15px;
+    margin:10px;
+    border-radius:10px;
+}
+
+/* Alarm */
+#alarmOverlay {
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:black;
+    display:none;
+    color:white;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    font-size:30px;
+    z-index:9999;
 }
 </style>
 </head>
@@ -79,141 +97,101 @@ button {
 <body>
 
 <h1>🔥 Grill App</h1>
+<div class="version">Version 1.0</div>
 
-<div class="container">
-    <div class="grid">
-        <button class="primary" onclick="addBurger()">🍔 Burger</button>
-        <button class="primary" onclick="addSteak()">🥩 Steak</button>
-        <button class="primary" onclick="addBratwurst()">🌭 Bratwurst</button>
-    </div>
-
-    <button class="secondary" onclick="testSound()">🔊 Sound testen</button>
+<div class="grid">
+    <button class="primary" onclick="addBurger()">🍔 Burger</button>
+    <button class="primary" onclick="addSteak()">🥩 Steak</button>
+    <button class="primary" onclick="addBratwurst()">🌭 Bratwurst</button>
 </div>
+
+<button class="secondary" onclick="testSound()">🔊 Sound testen</button>
 
 <div id="selection"></div>
 <div id="grill"></div>
 
+<!-- Alarm -->
+<div id="alarmOverlay">
+    <div id="alarmText">⏰</div>
+    <button onclick="closeAlarm()">Weiter</button>
+</div>
+
 <script>
-// 🔊 SOUND
-function playSound() {
-    let repeat = 0;
-    const beep = () => {
-        new Audio("beep.mp3").play();
-        setTimeout(()=> new Audio("beep.mp3").play(), 300);
-    };
-    const i = setInterval(() => {
-        beep();
-        repeat++;
-        if (repeat >= 3) clearInterval(i);
-    }, 1200);
+// Sound
+function playSound(){
+    new Audio("beep.mp3").play();
 }
 
-function testSound(){ playSound(); }
+function vibrate(){
+    if(navigator.vibrate) navigator.vibrate([200,100,200]);
+}
 
-// 🍔 BURGER
-function addBurger() {
-    createCard("🍔 Burger", [
-        { text:"🔥 Grill vorheizen auf 240°C", time:0 },
-        { text:"🎛️ Hitze reduzieren auf mittlere Stufe", time:0 },
+// Alarm
+let nextStep;
 
-        { text:"🥩 Patties auflegen – 2:15 direkt grillen 🔥 dann drehen", time:135 },
-        { text:"🔄 2:15 direkt grillen 🔥 dann wenden", time:135 },
+function showAlarm(text){
+    document.getElementById("alarmText").innerText = text;
+    document.getElementById("alarmOverlay").style.display="flex";
+    playSound(); vibrate();
+}
 
-        { text:"🥩 1:30 direkt grillen 🔥 dann drehen", time:90 },
-        { text:"🔥 1:30 direkt fertig grillen", time:90 },
+function closeAlarm(){
+    document.getElementById("alarmOverlay").style.display="none";
+    nextStep();
+}
 
-        { text:"🌡️ Patties in indirekte Zone legen", time:0 },
-        { text:"🍞 Buns kurz anrösten", time:0 },
-
-        { text:"🌡️ 3:00 indirekt fertig garen", time:180 }
+// Burger
+function addBurger(){
+    createCard("🍔 Burger",[
+        {text:"🔥 Vorheizen 240°C",time:0},
+        {text:"🥩 2:15 direkt grillen",time:135},
+        {text:"🔄 wenden + 2:15",time:135},
+        {text:"🥩 1:30 direkt grillen",time:90},
+        {text:"🌡️ indirekt + Buns",time:180}
     ]);
 }
 
-// 🌭 BRATWURST
-function addBratwurst() {
-    createCard("🌭 Bratwurst", [
-        { text:"🔥 Grill vorheizen auf 140–150°C", time:0 },
-        { text:"🌡️ 5:00 indirekt grillen (sanft garen)", time:300 },
-        { text:"🔥 Grill auf 180–200°C hochheizen", time:0 },
-        { text:"🌭 4:00 direkt grillen 🔥 dann wenden", time:240 },
-        { text:"🌭 4:00 direkt fertig grillen", time:240 }
+// Wurst
+function addBratwurst(){
+    createCard("🌭 Bratwurst",[
+        {text:"🔥 140–150°C",time:0},
+        {text:"🌡️ 5:00 indirekt",time:300},
+        {text:"🔥 hochheizen",time:0},
+        {text:"🌭 4:00 direkt",time:240}
     ]);
 }
 
-// 🥩 STEAK
+// Steak
 function addSteak(){
-    const sel = document.getElementById("selection");
-    sel.innerHTML = "<h2>🥩 Fleisch wählen</h2>";
-
-    sel.appendChild(choice("🐄 Rind",()=>chooseSteakLevel("r")));
-    sel.appendChild(choice("🐖 Schwein",()=>chooseSteakLevel("s")));
+    let s=document.getElementById("selection");
+    s.innerHTML="";
+    s.appendChild(choice("🐄 Rind",()=>startSteak()));
 }
 
-function chooseSteakLevel(type){
-    const sel = document.getElementById("selection");
-    sel.innerHTML = "<h2>🔥 Garstufe wählen</h2>";
-
-    sel.appendChild(choice("🔴 Englisch",()=>startSteak(type,"e")));
-    sel.appendChild(choice("🟠 Medium",()=>startSteak(type,"m")));
-    sel.appendChild(choice("⚫ Durch",()=>startSteak(type,"d")));
-}
-
-function startSteak(type,level){
+function startSteak(){
     document.getElementById("selection").innerHTML="";
-
-    let steps;
-
-    if(type==="r"){
-        if(level==="e"){
-            steps=[
-                { text:"🔥 Grill stark vorheizen (250°C+)", time:0 },
-                { text:"🥩 1:30 direkt angrillen 🔥 dann wenden", time:90 },
-                { text:"🥩 1:30 fertig grillen (roh)", time:90 }
-            ];
-        }
-        else if(level==="m"){
-            steps=[
-                { text:"🔥 Grill stark vorheizen (250°C+)", time:0 },
-                { text:"🥩 2:00 direkt angrillen 🔥 dann wenden", time:120 },
-                { text:"🥩 2:00 direkt grillen", time:120 },
-                { text:"🌡️ 3:00 indirekt nachziehen lassen", time:180 }
-            ];
-        }
-        else{
-            steps=[
-                { text:"🔥 Grill stark vorheizen (250°C+)", time:0 },
-                { text:"🥩 2:30 direkt angrillen 🔥 dann wenden", time:150 },
-                { text:"🥩 2:30 direkt grillen", time:150 },
-                { text:"🌡️ 5:00 indirekt fertig garen", time:300 }
-            ];
-        }
-    } else {
-        steps=[
-            { text:"🔥 Grill vorheizen auf 200–220°C", time:0 },
-            { text:"🥩 3:00 direkt grillen 🔥 dann wenden", time:180 },
-            { text:"🥩 3:00 direkt grillen", time:180 },
-            { text:"🌡️ 5:00 indirekt vollständig durch garen", time:300 }
-        ];
-    }
-
-    createCard("🥩 Steak", steps);
+    createCard("🥩 Steak",[
+        {text:"🔥 250°C+",time:0},
+        {text:"🥩 2:00 direkt",time:120},
+        {text:"🌡️ 3:00 indirekt",time:180}
+    ]);
 }
 
 // Auswahl
 function choice(txt,fn){
-    const d=document.createElement("div");
+    let d=document.createElement("div");
     d.className="choice";
     d.innerText=txt;
     d.onclick=fn;
     return d;
 }
 
-// CARD SYSTEM
+// CARD
 function createCard(title,steps){
-    let current=0, timeLeft=0, interval;
+    let current=0,timeLeft=0,total=0,interval;
 
     const card=document.createElement("div");
-    card.className="card neutral";
+    card.className="card";
 
     const h=document.createElement("h2");
     h.innerText=title;
@@ -222,74 +200,71 @@ function createCard(title,steps){
     timer.className="timer";
 
     const instr=document.createElement("div");
-    instr.className="instruction";
 
     const btn=document.createElement("button");
-    btn.className="primary";
-    btn.innerText="➡️ Weiter";
+    btn.innerText="Weiter";
 
-    card.appendChild(h);
-    card.appendChild(timer);
-    card.appendChild(instr);
-    card.appendChild(btn);
+    // Kreis
+    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+    svg.setAttribute("width","120");
+    svg.setAttribute("height","120");
 
+    const progress=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    progress.setAttribute("cx","60");
+    progress.setAttribute("cy","60");
+    progress.setAttribute("r","50");
+    progress.setAttribute("stroke","#ff7a00");
+    progress.setAttribute("stroke-width","10");
+    progress.setAttribute("fill","none");
+    progress.setAttribute("stroke-dasharray","314");
+
+    svg.appendChild(progress);
+
+    card.append(h,timer,svg,instr,btn);
     document.getElementById("grill").appendChild(card);
 
     function run(){
-        const step=steps[current];
+        let step=steps[current];
         instr.innerText=step.text;
 
-        let mode="neutral";
-        if(step.text.includes("indirekt")) mode="indirect";
-        else if(step.text.includes("direkt")) mode="direct";
-
-        card.className="card "+mode;
+        total=step.time;
+        timeLeft=step.time;
 
         if(step.time>0){
-            timeLeft=step.time;
-            update();
-
             interval=setInterval(()=>{
                 timeLeft--;
-                update();
+
+                let m=Math.floor(timeLeft/60);
+                let s=timeLeft%60;
+                timer.innerText=`${m}:${s.toString().padStart(2,"0")}`;
+
+                let offset=314*(1-timeLeft/total);
+                progress.setAttribute("stroke-dashoffset",offset);
 
                 if(timeLeft<=0){
                     clearInterval(interval);
-                    playSound();
-                    next();
+                    nextStep=next;
+                    showAlarm("⏰ Schritt fertig!");
                 }
             },1000);
-        } else {
-            timer.innerText="--:--";
         }
-    }
-
-    function update(){
-        const m=Math.floor(timeLeft/60);
-        const s=timeLeft%60;
-        timer.innerText=
-            String(m).padStart(2,"0")+":"+
-            String(s).padStart(2,"0");
     }
 
     function next(){
-        clearInterval(interval);
         current++;
-
         if(current>=steps.length){
             instr.innerText="🔥 Fertig!";
-            timer.innerText="";
-            playSound();
-            setTimeout(()=>card.remove(),2000);
             return;
         }
-
         run();
     }
 
     btn.onclick=next;
     run();
 }
+
+// Test
+function testSound(){ playSound(); }
 </script>
 
 </body>
