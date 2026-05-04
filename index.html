@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>🔥 Grill App v1.0</title>
+<title>🔥 Grill App v1.01</title>
 
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -64,9 +64,10 @@ button {
 }
 
 /* Kreis */
-.circle {
-    width: 120px;
-    margin: 20px auto;
+.circleWrapper {
+    position:relative;
+    width:120px;
+    margin:20px auto;
 }
 
 /* Auswahl */
@@ -97,7 +98,7 @@ button {
 <body>
 
 <h1>🔥 Grill App</h1>
-<div class="version">Version 1.0</div>
+<div class="version">Version 1.01</div>
 
 <div class="grid">
     <button class="primary" onclick="addBurger()">🍔 Burger</button>
@@ -117,7 +118,8 @@ button {
 </div>
 
 <script>
-// Sound
+
+// SOUND
 function playSound(){
     new Audio("beep.mp3").play();
 }
@@ -126,13 +128,28 @@ function vibrate(){
     if(navigator.vibrate) navigator.vibrate([200,100,200]);
 }
 
-// Alarm
+// ACTION TEXT (ALLE FÄLLE)
+function getActionText(text){
+
+    if(text.includes("wenden")) return "🔄 Jetzt wenden!";
+    if(text.includes("drehen")) return "↪️ Jetzt drehen!";
+    if(text.includes("Buns")) return "🍞 Buns rösten!";
+    if(text.includes("indirekt")) return "🌡️ Indirekt weiter garen!";
+    if(text.includes("direkt")) return "🔥 Direkt weiter grillen!";
+    if(text.includes("Vorheizen")) return "🔥 Grill vorheizen!";
+    if(text.includes("hochheizen")) return "🔥 Grill hochheizen!";
+
+    return "⏰ Nächster Schritt!";
+}
+
+// ALARM
 let nextStep;
 
 function showAlarm(text){
     document.getElementById("alarmText").innerText = text;
     document.getElementById("alarmOverlay").style.display="flex";
-    playSound(); vibrate();
+    playSound();
+    vibrate();
 }
 
 function closeAlarm(){
@@ -140,44 +157,53 @@ function closeAlarm(){
     nextStep();
 }
 
-// Burger
+// BURGER
 function addBurger(){
     createCard("🍔 Burger",[
         {text:"🔥 Vorheizen 240°C",time:0},
-        {text:"🥩 2:15 direkt grillen",time:135},
-        {text:"🔄 wenden + 2:15",time:135},
-        {text:"🥩 1:30 direkt grillen",time:90},
+        {text:"🥩 2:15 direkt grillen 🔥 dann drehen",time:135},
+        {text:"🔄 2:15 direkt grillen 🔥 dann wenden",time:135},
+        {text:"🥩 1:30 direkt grillen 🔥 dann drehen",time:90},
         {text:"🌡️ indirekt + Buns",time:180}
     ]);
 }
 
-// Wurst
+// BRATWURST
 function addBratwurst(){
     createCard("🌭 Bratwurst",[
-        {text:"🔥 140–150°C",time:0},
+        {text:"🔥 Vorheizen 140–150°C",time:0},
         {text:"🌡️ 5:00 indirekt",time:300},
         {text:"🔥 hochheizen",time:0},
-        {text:"🌭 4:00 direkt",time:240}
+        {text:"🌭 4:00 direkt 🔥 dann wenden",time:240}
     ]);
 }
 
-// Steak
+// STEAK (mit Auswahl)
 function addSteak(){
     let s=document.getElementById("selection");
-    s.innerHTML="";
-    s.appendChild(choice("🐄 Rind",()=>startSteak()));
+    s.innerHTML="<h2>🥩 Fleisch wählen</h2>";
+    s.appendChild(choice("🐄 Rind",()=>chooseLevel("r")));
+    s.appendChild(choice("🐖 Schwein",()=>chooseLevel("s")));
 }
 
-function startSteak(){
+function chooseLevel(type){
+    let s=document.getElementById("selection");
+    s.innerHTML="<h2>🔥 Garstufe</h2>";
+
+    s.appendChild(choice("🟠 Medium",()=>startSteak(type)));
+}
+
+function startSteak(type){
     document.getElementById("selection").innerHTML="";
+
     createCard("🥩 Steak",[
         {text:"🔥 250°C+",time:0},
-        {text:"🥩 2:00 direkt",time:120},
+        {text:"🥩 2:00 direkt 🔥 dann wenden",time:120},
         {text:"🌡️ 3:00 indirekt",time:180}
     ]);
 }
 
-// Auswahl
+// UI
 function choice(txt,fn){
     let d=document.createElement("div");
     d.className="choice";
@@ -186,7 +212,7 @@ function choice(txt,fn){
     return d;
 }
 
-// CARD
+// CARD SYSTEM
 function createCard(title,steps){
     let current=0,timeLeft=0,total=0,interval;
 
@@ -200,27 +226,42 @@ function createCard(title,steps){
     timer.className="timer";
 
     const instr=document.createElement("div");
+    instr.className="instruction";
 
     const btn=document.createElement("button");
     btn.innerText="Weiter";
 
-    // Kreis
-    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+    // Kreis + Icon
+    const wrapper=document.createElement("div");
+    wrapper.className="circleWrapper";
+
+    const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
     svg.setAttribute("width","120");
     svg.setAttribute("height","120");
 
-    const progress=document.createElementNS("http://www.w3.org/2000/svg","circle");
-    progress.setAttribute("cx","60");
-    progress.setAttribute("cy","60");
-    progress.setAttribute("r","50");
-    progress.setAttribute("stroke","#ff7a00");
-    progress.setAttribute("stroke-width","10");
-    progress.setAttribute("fill","none");
-    progress.setAttribute("stroke-dasharray","314");
+    const circle=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circle.setAttribute("cx","60");
+    circle.setAttribute("cy","60");
+    circle.setAttribute("r","50");
+    circle.setAttribute("stroke","#ff7a00");
+    circle.setAttribute("stroke-width","10");
+    circle.setAttribute("fill","none");
+    circle.setAttribute("stroke-dasharray","314");
+    circle.setAttribute("transform","rotate(-90 60 60)");
 
-    svg.appendChild(progress);
+    svg.appendChild(circle);
 
-    card.append(h,timer,svg,instr,btn);
+    const icon=document.createElement("div");
+    icon.innerText="⏱️";
+    icon.style.position="absolute";
+    icon.style.top="50%";
+    icon.style.left="50%";
+    icon.style.transform="translate(-50%,-50%)";
+
+    wrapper.appendChild(svg);
+    wrapper.appendChild(icon);
+
+    card.append(h,timer,wrapper,instr,btn);
     document.getElementById("grill").appendChild(card);
 
     function run(){
@@ -239,12 +280,14 @@ function createCard(title,steps){
                 timer.innerText=`${m}:${s.toString().padStart(2,"0")}`;
 
                 let offset=314*(1-timeLeft/total);
-                progress.setAttribute("stroke-dashoffset",offset);
+                circle.setAttribute("stroke-dashoffset",offset);
 
                 if(timeLeft<=0){
                     clearInterval(interval);
                     nextStep=next;
-                    showAlarm("⏰ Schritt fertig!");
+
+                    const action=getActionText(step.text);
+                    showAlarm(action + "\n\n" + step.text);
                 }
             },1000);
         }
@@ -263,8 +306,8 @@ function createCard(title,steps){
     run();
 }
 
-// Test
 function testSound(){ playSound(); }
+
 </script>
 
 </body>
