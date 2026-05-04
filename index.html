@@ -4,33 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>🔥 Grill App v1.06</title>
+<title>🔥 Grill App v1.07</title>
 
 <link rel="apple-touch-icon" href="icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
 
 <style>
 body {
     font-family: -apple-system;
-    background: #111;
-    color: white;
-    text-align: center;
+    background:#111;
+    color:white;
+    text-align:center;
 }
 
+/* Header */
 .version { font-size:12px; opacity:0.6; }
 
+/* Buttons oben */
 .grid {
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:8px;
-    padding:8px;
+    gap:10px;
+    padding:10px;
 }
 
 button {
-    padding:12px;
-    font-size:15px;
-    border-radius:10px;
+    padding:14px;
+    font-size:16px;
     border:none;
+    border-radius:10px;
 }
 
 .primary { background:#ff7a00; }
@@ -39,21 +40,25 @@ button {
 /* Auswahl */
 .choice {
     background:#2a2a2a;
-    padding:12px;
+    padding:14px;
     margin:8px;
     border-radius:10px;
 }
 
-/* Karte */
+/* Karten */
+#grill {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
 .card {
     background:#1f1f1f;
-    margin:8px;
-    padding:12px;
-    border-radius:14px;
-    width:95%;
-    max-width:380px;
-    margin-left:auto;
-    margin-right:auto;
+    width:90%;
+    max-width:420px;
+    margin:10px;
+    padding:15px;
+    border-radius:16px;
 }
 
 /* Layout */
@@ -80,21 +85,21 @@ button {
 /* Button */
 .nextBtn {
     background:#2ecc71;
-    padding:10px;
-    font-size:14px;
 }
 
 /* Text */
 .instruction {
-    margin-top:8px;
-    font-size:16px;
+    margin-top:10px;
+    font-size:18px;
 }
 
-/* Alarm */
+/* Popup */
 #alarmOverlay {
     position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
     background:black;
     display:none;
     color:white;
@@ -102,6 +107,7 @@ button {
     justify-content:center;
     flex-direction:column;
     font-size:24px;
+    z-index:999;
 }
 </style>
 </head>
@@ -109,7 +115,7 @@ button {
 <body>
 
 <h1>🔥 Grill App</h1>
-<div class="version">Version 1.06</div>
+<div class="version">Version 1.07</div>
 
 <div class="grid">
     <button class="primary" onclick="addBurger()">🍔 Burger</button>
@@ -122,6 +128,7 @@ button {
 <div id="selection"></div>
 <div id="grill"></div>
 
+<!-- Popup -->
 <div id="alarmOverlay">
     <div id="alarmText"></div>
     <button onclick="closeAlarm()">Weiter</button>
@@ -129,38 +136,37 @@ button {
 
 <script>
 
-// 🔊 Sound nur bei Timer-Ende
-function playSoundTriple(){
+// 🔊 Sound
+function playSound(){
     for(let i=0;i<3;i++){
         setTimeout(()=>new Audio("beep.mp3").play(), i*500);
     }
 }
 
 // 📳 Vibration
-function vibrateStrong(){
+function vibrate(){
     if(navigator.vibrate){
         navigator.vibrate([300,100,300]);
     }
 }
 
-// Alarm
+// Popup
 let nextStep;
 
 function showAlarm(text){
-    document.getElementById("alarmText").innerText=text;
-    document.getElementById("alarmOverlay").style.display="flex";
-
-    playSoundTriple();
-    vibrateStrong();
+    document.getElementById("alarmText").innerText = text;
+    document.getElementById("alarmOverlay").style.display = "flex";
+    playSound();
+    vibrate();
 }
 
 function closeAlarm(){
-    document.getElementById("alarmOverlay").style.display="none";
+    document.getElementById("alarmOverlay").style.display = "none";
     nextStep();
 }
 
 // Texte
-function getActionText(text){
+function actionText(text){
     if(text.includes("wenden")) return "🔄 Jetzt wenden!";
     if(text.includes("drehen")) return "↪️ Jetzt drehen!";
     if(text.includes("indirekt")) return "🌡️ Indirekt weiter garen!";
@@ -171,9 +177,9 @@ function getActionText(text){
 function addBurger(){
     createCard("🍔 Burger",[
         {text:"🔥 Vorheizen 240°C",time:0},
-        {text:"🥩 2:15 direkt 🔥 dann drehen",time:135},
-        {text:"🔄 2:15 direkt 🔥 dann wenden",time:135},
-        {text:"🥩 1:30 direkt 🔥 dann drehen",time:90},
+        {text:"🥩 2:15 direkt → drehen",time:135},
+        {text:"🔄 2:15 direkt → wenden",time:135},
+        {text:"🥩 1:30 direkt → drehen",time:90},
         {text:"🌡️ indirekt + Buns",time:180}
     ]);
 }
@@ -181,9 +187,9 @@ function addBurger(){
 // 🌭
 function addBratwurst(){
     createCard("🌭 Bratwurst",[
-        {text:"🔥 Vorheizen 140–150°C",time:0},
+        {text:"🔥 140–150°C",time:0},
         {text:"🌡️ 5:00 indirekt",time:300},
-        {text:"🌭 4:00 direkt 🔥 dann wenden",time:240},
+        {text:"🌭 4:00 direkt → wenden",time:240},
         {text:"🌭 4:00 fertig",time:240}
     ]);
 }
@@ -214,14 +220,14 @@ function startSteak(type,level){
     if(type==="s"){
         steps=[
             {text:"🔥 200–220°C",time:0},
-            {text:"🥩 3:00 direkt 🔥 dann wenden",time:180},
+            {text:"🥩 3:00 direkt → wenden",time:180},
             {text:"🥩 3:00 direkt",time:180},
             {text:"🌡️ 5:00 indirekt (saftig & durch)",time:300}
         ];
     } else {
         steps=[
             {text:"🔥 250°C+",time:0},
-            {text:"🥩 2:00 direkt 🔥 dann wenden",time:120},
+            {text:"🥩 2:00 direkt → wenden",time:120},
             {text:"🌡️ indirekt",time:180}
         ];
     }
@@ -229,7 +235,7 @@ function startSteak(type,level){
     createCard("🥩 Steak",steps);
 }
 
-// UI
+// Auswahl
 function choice(txt,fn){
     let d=document.createElement("div");
     d.className="choice";
@@ -238,7 +244,7 @@ function choice(txt,fn){
     return d;
 }
 
-// CARD
+// 🔥 CARD SYSTEM
 function createCard(title,steps){
 
     let current=0,timeLeft=0,total=0,interval;
@@ -304,7 +310,7 @@ function createCard(title,steps){
                 if(timeLeft<=0){
                     clearInterval(interval);
                     nextStep=next;
-                    showAlarm(getActionText(step.text));
+                    showAlarm(actionText(step.text));
                 }
             },1000);
         }
@@ -318,10 +324,13 @@ function createCard(title,steps){
 
     function next(){
         current++;
+
         if(current>=steps.length){
-            instr.innerText="🔥 Fertig!";
+            // 🔥 Karte entfernen
+            card.remove();
             return;
         }
+
         run();
     }
 
@@ -331,8 +340,9 @@ function createCard(title,steps){
 }
 
 function testSound(){
-    playSoundTriple();
+    playSound();
 }
+
 </script>
 
 </body>
