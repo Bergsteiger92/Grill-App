@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>🔥 Grill App v1.04</title>
+<title>🔥 Grill App v1.05</title>
 
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,61 +27,51 @@ body {
 }
 
 button {
-    padding:16px;
-    font-size:18px;
-    border-radius:12px;
+    padding:14px;
+    font-size:16px;
+    border-radius:10px;
     border:none;
-    margin-top:10px;
 }
 
 .primary { background:#ff7a00; }
 .secondary { background:#333; color:white; }
 
-/* 👉 KACHELN */
-#grill {
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-}
-
+/* 🔥 breite Kachel */
 .card {
     background:#1f1f1f;
     margin:10px;
     padding:15px;
     border-radius:16px;
-    width:160px;
+    width:90%;
+    max-width:400px;
+    margin-left:auto;
+    margin-right:auto;
 }
 
-/* Timer */
-.timer { font-size:26px; }
+/* obere Zeile */
+.row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
 
 /* Kreis */
 .circleWrapper {
     position:relative;
-    width:100px;
-    margin:10px auto;
+    width:80px;
 }
 
-.choice {
-    background:#2a2a2a;
-    padding:15px;
-    margin:10px;
-    border-radius:10px;
+/* Button rechts */
+.nextBtn {
+    background:#2ecc71;
+    padding:12px;
+    font-size:14px;
 }
 
-/* Alarm */
-#alarmOverlay {
-    position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:black;
-    display:none;
-    color:white;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    font-size:28px;
-    z-index:9999;
+/* Text */
+.instruction {
+    margin-top:10px;
+    font-size:18px;
 }
 </style>
 </head>
@@ -89,7 +79,7 @@ button {
 <body>
 
 <h1>🔥 Grill App</h1>
-<div class="version">Version 1.04</div>
+<div class="version">Version 1.05</div>
 
 <div class="grid">
     <button class="primary" onclick="startDish(addBurger)">🍔 Burger</button>
@@ -102,8 +92,8 @@ button {
 <div id="selection"></div>
 <div id="grill"></div>
 
-<div id="alarmOverlay">
-    <div id="alarmText">⏰</div>
+<div id="alarmOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:black;color:white;align-items:center;justify-content:center;flex-direction:column;">
+    <div id="alarmText"></div>
     <button onclick="closeAlarm()">Weiter</button>
 </div>
 
@@ -112,9 +102,7 @@ button {
 // 🔊 Sound 3x
 function playSoundTriple(){
     for(let i=0;i<3;i++){
-        setTimeout(()=>{
-            new Audio("beep.mp3").play();
-        }, i*600);
+        setTimeout(()=>new Audio("beep.mp3").play(), i*600);
     }
 }
 
@@ -130,7 +118,6 @@ function alertUser(){
     vibrateStrong();
 }
 
-// Start trigger
 function startDish(fn){
     alertUser();
     fn();
@@ -140,28 +127,23 @@ function startDish(fn){
 function getActionText(text){
     if(text.includes("wenden")) return "🔄 Jetzt wenden!";
     if(text.includes("drehen")) return "↪️ Jetzt drehen!";
-    if(text.includes("Buns")) return "🍞 Buns rösten!";
     if(text.includes("indirekt")) return "🌡️ Indirekt weiter garen!";
-    if(text.includes("direkt")) return "🔥 Direkt weiter grillen!";
-    if(text.includes("Vorheizen")) return "🔥 Grill vorheizen!";
-    return "⏰ Nächster Schritt!";
+    return "⏰ Weiter!";
 }
 
 // Alarm
 let nextStep;
-
 function showAlarm(text){
     document.getElementById("alarmText").innerText=text;
     document.getElementById("alarmOverlay").style.display="flex";
     alertUser();
 }
-
 function closeAlarm(){
     document.getElementById("alarmOverlay").style.display="none";
     nextStep();
 }
 
-// 🍔 BURGER
+// 🍔
 function addBurger(){
     createCard("🍔 Burger",[
         {text:"🔥 Vorheizen 240°C",time:0},
@@ -172,32 +154,32 @@ function addBurger(){
     ]);
 }
 
-// 🌭 BRATWURST
+// 🌭
 function addBratwurst(){
     createCard("🌭 Bratwurst",[
         {text:"🔥 Vorheizen 140–150°C",time:0},
         {text:"🌡️ 5:00 indirekt",time:300},
         {text:"🌭 4:00 direkt 🔥 dann wenden",time:240},
-        {text:"🌭 4:00 fertig grillen (goldbraun)",time:240}
+        {text:"🌭 4:00 fertig",time:240}
     ]);
 }
 
-// 🥩 STEAK
+// 🥩
 function addSteak(){
     let s=document.getElementById("selection");
     s.innerHTML="<h2>🥩 Fleisch wählen</h2>";
 
-    s.appendChild(choice("🐄 Rind",()=>chooseLevel("r")));
-    s.appendChild(choice("🐖 Schwein",()=>chooseLevel("s")));
+    s.appendChild(choice("🐄 Rind",()=>chooseLevel()));
+    s.appendChild(choice("🐖 Schwein",()=>startSteak("s")));
 }
 
-function chooseLevel(type){
+function chooseLevel(){
     let s=document.getElementById("selection");
-    s.innerHTML="<h2>🔥 Garstufe</h2>";
+    s.innerHTML="<h2>🔥 Garstufe wählen</h2>";
 
-    s.appendChild(choice("🔴 Englisch",()=>startSteak(type,"e")));
-    s.appendChild(choice("🟠 Medium",()=>startSteak(type,"m")));
-    s.appendChild(choice("⚫ Durch",()=>startSteak(type,"d")));
+    s.appendChild(choice("🔴 Englisch",()=>startSteak("r","e")));
+    s.appendChild(choice("🟠 Medium",()=>startSteak("r","m")));
+    s.appendChild(choice("⚫ Durch",()=>startSteak("r","d")));
 }
 
 function startSteak(type,level){
@@ -205,34 +187,18 @@ function startSteak(type,level){
 
     let steps;
 
-    if(type==="r"){
-        if(level==="e"){
-            steps=[
-                {text:"🔥 250°C+",time:0},
-                {text:"🥩 1:30 direkt 🔥 dann wenden",time:90},
-                {text:"🥩 1:30 fertig (roh)",time:90}
-            ];
-        } else if(level==="m"){
-            steps=[
-                {text:"🔥 250°C+",time:0},
-                {text:"🥩 2:00 direkt 🔥 dann wenden",time:120},
-                {text:"🥩 2:00 direkt",time:120},
-                {text:"🌡️ 3:00 indirekt",time:180}
-            ];
-        } else {
-            steps=[
-                {text:"🔥 250°C+",time:0},
-                {text:"🥩 2:30 direkt 🔥 dann wenden",time:150},
-                {text:"🥩 2:30 direkt",time:150},
-                {text:"🌡️ 5:00 indirekt",time:300}
-            ];
-        }
-    } else {
+    if(type==="s"){
         steps=[
             {text:"🔥 200–220°C",time:0},
             {text:"🥩 3:00 direkt 🔥 dann wenden",time:180},
             {text:"🥩 3:00 direkt",time:180},
-            {text:"🌡️ 4–5:00 indirekt (saftig & durch)",time:300}
+            {text:"🌡️ 5:00 indirekt (saftig & durch)",time:300}
+        ];
+    } else {
+        steps=[
+            {text:"🔥 250°C+",time:0},
+            {text:"🥩 2:00 direkt 🔥 dann wenden",time:120},
+            {text:"🌡️ indirekt",time:180}
         ];
     }
 
@@ -248,8 +214,9 @@ function choice(txt,fn){
     return d;
 }
 
-// CARD (jede Kachel!)
+// 🔥 CARD
 function createCard(title,steps){
+
     let current=0,timeLeft=0,total=0,interval;
 
     let icon="🍔";
@@ -259,30 +226,25 @@ function createCard(title,steps){
     const card=document.createElement("div");
     card.className="card";
 
-    const titleEl=document.createElement("div");
-    titleEl.innerText=title;
-
-    const timer=document.createElement("div");
-    timer.className="timer";
-
-    const instr=document.createElement("div");
+    const row=document.createElement("div");
+    row.className="row";
 
     const wrapper=document.createElement("div");
     wrapper.className="circleWrapper";
 
     const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-    svg.setAttribute("width","100");
-    svg.setAttribute("height","100");
+    svg.setAttribute("width","80");
+    svg.setAttribute("height","80");
 
     const circle=document.createElementNS("http://www.w3.org/2000/svg","circle");
-    circle.setAttribute("cx","50");
-    circle.setAttribute("cy","50");
-    circle.setAttribute("r","40");
+    circle.setAttribute("cx","40");
+    circle.setAttribute("cy","40");
+    circle.setAttribute("r","35");
     circle.setAttribute("stroke","#ff7a00");
-    circle.setAttribute("stroke-width","8");
+    circle.setAttribute("stroke-width","6");
     circle.setAttribute("fill","none");
-    circle.setAttribute("stroke-dasharray","251");
-    circle.setAttribute("transform","rotate(-90 50 50)");
+    circle.setAttribute("stroke-dasharray","220");
+    circle.setAttribute("transform","rotate(-90 40 40)");
 
     const iconEl=document.createElement("div");
     iconEl.innerText=icon;
@@ -294,7 +256,16 @@ function createCard(title,steps){
     svg.appendChild(circle);
     wrapper.append(svg,iconEl);
 
-    card.append(titleEl,timer,wrapper,instr);
+    const btn=document.createElement("button");
+    btn.className="nextBtn";
+    btn.innerText="Weiter";
+
+    row.append(wrapper,btn);
+
+    const instr=document.createElement("div");
+    instr.className="instruction";
+
+    card.append(row,instr);
     document.getElementById("grill").appendChild(card);
 
     function run(){
@@ -308,15 +279,13 @@ function createCard(title,steps){
             interval=setInterval(()=>{
                 timeLeft--;
 
-                timer.innerText=`${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,"0")}`;
-
-                let offset=251*(1-timeLeft/total);
+                let offset=220*(1-timeLeft/total);
                 circle.setAttribute("stroke-dashoffset",offset);
 
                 if(timeLeft<=0){
                     clearInterval(interval);
                     nextStep=next;
-                    showAlarm(getActionText(step.text)+"\n\n"+step.text);
+                    showAlarm(getActionText(step.text));
                 }
             },1000);
         }
@@ -330,6 +299,8 @@ function createCard(title,steps){
         }
         run();
     }
+
+    btn.onclick=next;
 
     run();
 }
