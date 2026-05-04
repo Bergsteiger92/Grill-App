@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>🔥 Grill App v1.05</title>
+<title>🔥 Grill App v1.06</title>
 
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,13 +22,13 @@ body {
 .grid {
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:10px;
-    padding:10px;
+    gap:8px;
+    padding:8px;
 }
 
 button {
-    padding:14px;
-    font-size:16px;
+    padding:12px;
+    font-size:15px;
     border-radius:10px;
     border:none;
 }
@@ -36,19 +36,27 @@ button {
 .primary { background:#ff7a00; }
 .secondary { background:#333; color:white; }
 
-/* 🔥 breite Kachel */
+/* Auswahl */
+.choice {
+    background:#2a2a2a;
+    padding:12px;
+    margin:8px;
+    border-radius:10px;
+}
+
+/* Karte */
 .card {
     background:#1f1f1f;
-    margin:10px;
-    padding:15px;
-    border-radius:16px;
-    width:90%;
-    max-width:400px;
+    margin:8px;
+    padding:12px;
+    border-radius:14px;
+    width:95%;
+    max-width:380px;
     margin-left:auto;
     margin-right:auto;
 }
 
-/* obere Zeile */
+/* Layout */
 .row {
     display:flex;
     align-items:center;
@@ -61,17 +69,39 @@ button {
     width:80px;
 }
 
-/* Button rechts */
+.timeText {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:14px;
+}
+
+/* Button */
 .nextBtn {
     background:#2ecc71;
-    padding:12px;
+    padding:10px;
     font-size:14px;
 }
 
 /* Text */
 .instruction {
-    margin-top:10px;
-    font-size:18px;
+    margin-top:8px;
+    font-size:16px;
+}
+
+/* Alarm */
+#alarmOverlay {
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:black;
+    display:none;
+    color:white;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    font-size:24px;
 }
 </style>
 </head>
@@ -79,12 +109,12 @@ button {
 <body>
 
 <h1>🔥 Grill App</h1>
-<div class="version">Version 1.05</div>
+<div class="version">Version 1.06</div>
 
 <div class="grid">
-    <button class="primary" onclick="startDish(addBurger)">🍔 Burger</button>
-    <button class="primary" onclick="startDish(addSteak)">🥩 Steak</button>
-    <button class="primary" onclick="startDish(addBratwurst)">🌭 Bratwurst</button>
+    <button class="primary" onclick="addBurger()">🍔 Burger</button>
+    <button class="primary" onclick="addSteak()">🥩 Steak</button>
+    <button class="primary" onclick="addBratwurst()">🌭 Bratwurst</button>
 </div>
 
 <button class="secondary" onclick="testSound()">🔊 Sound testen</button>
@@ -92,55 +122,49 @@ button {
 <div id="selection"></div>
 <div id="grill"></div>
 
-<div id="alarmOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:black;color:white;align-items:center;justify-content:center;flex-direction:column;">
+<div id="alarmOverlay">
     <div id="alarmText"></div>
     <button onclick="closeAlarm()">Weiter</button>
 </div>
 
 <script>
 
-// 🔊 Sound 3x
+// 🔊 Sound nur bei Timer-Ende
 function playSoundTriple(){
     for(let i=0;i<3;i++){
-        setTimeout(()=>new Audio("beep.mp3").play(), i*600);
+        setTimeout(()=>new Audio("beep.mp3").play(), i*500);
     }
 }
 
 // 📳 Vibration
 function vibrateStrong(){
     if(navigator.vibrate){
-        navigator.vibrate([300,100,300,100,500]);
+        navigator.vibrate([300,100,300]);
     }
 }
 
-function alertUser(){
+// Alarm
+let nextStep;
+
+function showAlarm(text){
+    document.getElementById("alarmText").innerText=text;
+    document.getElementById("alarmOverlay").style.display="flex";
+
     playSoundTriple();
     vibrateStrong();
 }
 
-function startDish(fn){
-    alertUser();
-    fn();
+function closeAlarm(){
+    document.getElementById("alarmOverlay").style.display="none";
+    nextStep();
 }
 
-// Action Text
+// Texte
 function getActionText(text){
     if(text.includes("wenden")) return "🔄 Jetzt wenden!";
     if(text.includes("drehen")) return "↪️ Jetzt drehen!";
     if(text.includes("indirekt")) return "🌡️ Indirekt weiter garen!";
     return "⏰ Weiter!";
-}
-
-// Alarm
-let nextStep;
-function showAlarm(text){
-    document.getElementById("alarmText").innerText=text;
-    document.getElementById("alarmOverlay").style.display="flex";
-    alertUser();
-}
-function closeAlarm(){
-    document.getElementById("alarmOverlay").style.display="none";
-    nextStep();
 }
 
 // 🍔
@@ -167,7 +191,7 @@ function addBratwurst(){
 // 🥩
 function addSteak(){
     let s=document.getElementById("selection");
-    s.innerHTML="<h2>🥩 Fleisch wählen</h2>";
+    s.innerHTML="<h3>🥩 Fleisch wählen</h3>";
 
     s.appendChild(choice("🐄 Rind",()=>chooseLevel()));
     s.appendChild(choice("🐖 Schwein",()=>startSteak("s")));
@@ -175,7 +199,7 @@ function addSteak(){
 
 function chooseLevel(){
     let s=document.getElementById("selection");
-    s.innerHTML="<h2>🔥 Garstufe wählen</h2>";
+    s.innerHTML="<h3>🔥 Garstufe</h3>";
 
     s.appendChild(choice("🔴 Englisch",()=>startSteak("r","e")));
     s.appendChild(choice("🟠 Medium",()=>startSteak("r","m")));
@@ -214,14 +238,10 @@ function choice(txt,fn){
     return d;
 }
 
-// 🔥 CARD
+// CARD
 function createCard(title,steps){
 
     let current=0,timeLeft=0,total=0,interval;
-
-    let icon="🍔";
-    if(title.includes("Bratwurst")) icon="🌭";
-    if(title.includes("Steak")) icon="🥩";
 
     const card=document.createElement("div");
     card.className="card";
@@ -246,15 +266,11 @@ function createCard(title,steps){
     circle.setAttribute("stroke-dasharray","220");
     circle.setAttribute("transform","rotate(-90 40 40)");
 
-    const iconEl=document.createElement("div");
-    iconEl.innerText=icon;
-    iconEl.style.position="absolute";
-    iconEl.style.top="50%";
-    iconEl.style.left="50%";
-    iconEl.style.transform="translate(-50%,-50%)";
+    const timeText=document.createElement("div");
+    timeText.className="timeText";
 
     svg.appendChild(circle);
-    wrapper.append(svg,iconEl);
+    wrapper.append(svg,timeText);
 
     const btn=document.createElement("button");
     btn.className="nextBtn";
@@ -275,9 +291,12 @@ function createCard(title,steps){
         total=step.time;
         timeLeft=step.time;
 
+        update();
+
         if(step.time>0){
             interval=setInterval(()=>{
                 timeLeft--;
+                update();
 
                 let offset=220*(1-timeLeft/total);
                 circle.setAttribute("stroke-dashoffset",offset);
@@ -289,6 +308,12 @@ function createCard(title,steps){
                 }
             },1000);
         }
+    }
+
+    function update(){
+        let m=Math.floor(timeLeft/60);
+        let s=timeLeft%60;
+        timeText.innerText=`${m}:${s.toString().padStart(2,"0")}`;
     }
 
     function next(){
@@ -305,8 +330,9 @@ function createCard(title,steps){
     run();
 }
 
-function testSound(){ alertUser(); }
-
+function testSound(){
+    playSoundTriple();
+}
 </script>
 
 </body>
